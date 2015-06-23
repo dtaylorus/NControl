@@ -100,6 +100,32 @@ namespace NControlDemo.FormsApp.Views
                 DrawingFunction = (canvas, rect) => canvas.FillRectangle(rect, new SolidBrush(new NGraphics.Color("#3498DB")))               
             };
 
+            var grid = new Grid();
+            grid.Children.Add(new StackLayout
+                {
+                    Orientation = StackOrientation.Horizontal,
+                    HorizontalOptions = LayoutOptions.CenterAndExpand,
+                    Padding = 11,
+                    Children =
+                    {
+                        new CircularButtonControl { FAIcon = FontAwesomeLabel.FAPlay },
+                        new CircularButtonControl { FAIcon = FontAwesomeLabel.FAPlus },
+                        new CircularButtonControl { FAIcon = FontAwesomeLabel.FATerminal },
+                        new Button { Text = "Hello" },
+                    }
+                }, 0, 0);
+
+            var buttonOverlay = new NControlView { 
+                DrawingFunction = (canvas, rect) =>
+                {
+                    rect.Inflate(-10, -10);
+                    canvas.DrawRectangle(rect, Pens.Blue, null);
+                },
+            };
+            buttonOverlay.InputTransparent = true;
+
+            grid.Children.Add(buttonOverlay, 0, 0);
+
             _bottomBar = new NControlView
             {
 
@@ -107,19 +133,7 @@ namespace NControlDemo.FormsApp.Views
                 DrawingFunction = (ICanvas canvas, Rect rect) =>
                     canvas.DrawLine(0, 0, rect.Width, 0, NGraphics.Colors.Gray, 0.5)
                 ,
-                Content = new StackLayout
-                {
-                    Orientation = StackOrientation.Horizontal,
-                    HorizontalOptions = LayoutOptions.CenterAndExpand,
-                    Padding = 11,
-                    Children =
-                    {
-                        new CircularButtonControl {FAIcon = FontAwesomeLabel.FAPlay },
-                        new CircularButtonControl {FAIcon = FontAwesomeLabel.FAPlus },
-                        new CircularButtonControl {FAIcon = FontAwesomeLabel.FATerminal },
-                        new CircularButtonControl {FAIcon = FontAwesomeLabel.FAHospitalO },
-                    }
-                }
+                Content = grid
             };
 
             // Navigation bar
@@ -170,11 +184,10 @@ namespace NControlDemo.FormsApp.Views
 
             // Add map
             var map = new Map();
-            var mapOverlay = new BoxView { BackgroundColor = Xamarin.Forms.Color.Transparent };
-            mapOverlay.GestureRecognizers.Add(new TapGestureRecognizer
-            {
-                Command = new Command(async (obj) => await ToggleChromeAsync())
-            });
+            var mapOverlay = new NControlView { 
+                BackgroundColor = Xamarin.Forms.Color.Transparent,
+            };
+            mapOverlay.OnTouchesBegan += async (sender, e) => await ToggleChromeAsync();
             _mapContainer.Children.Add(map, () => _mapContainer.Bounds);
             _mapContainer.Children.Add(mapOverlay, () => _mapContainer.Bounds);
         }

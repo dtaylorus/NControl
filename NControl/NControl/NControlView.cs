@@ -26,6 +26,7 @@
  ************************************************************************/
 
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using NGraphics;
 using Xamarin.Forms;
@@ -37,15 +38,6 @@ namespace NControl.Abstractions
 	/// </summary>
     public class NControlView: ContentView
 	{
-        #region Private Members
-
-        /// <summary>
-        /// The color of the background.
-        /// </summary>
-        private Xamarin.Forms.Color _backgroundColor;
-
-        #endregion
-
         #region Events
 
         /// <summary>
@@ -82,8 +74,7 @@ namespace NControl.Abstractions
 		/// </summary>
 		public NControlView()
 		{
-			base.BackgroundColor = Xamarin.Forms.Color.Transparent;
-            BackgroundColor = Xamarin.Forms.Color.Transparent;
+			BackgroundColor = Xamarin.Forms.Color.Transparent;
 		}
 
 		/// <summary>
@@ -100,28 +91,11 @@ namespace NControl.Abstractions
 
         #region Properties
 
-       	/// <summary>
-		/// Gets the drawing function.
-		/// </summary>
-		/// <value>The drawing function.</value>
-        public Action<ICanvas, Rect> DrawingFunction {get; set;}
-
-        /// <summary>
-        /// Gets or sets the color which will fill the background of a VisualElement. This is a bindable property.
-        /// </summary>
-        /// <value>The color of the background.</value>
-        public new Xamarin.Forms.Color BackgroundColor
-        {
-            get
-            {
-                return _backgroundColor;
-            }
-            set
-            {
-                _backgroundColor = value;
-                Invalidate();
-            }
-        }
+	    /// <summary>
+	    /// Gets the drawing function.
+	    /// </summary>
+	    /// <value>The drawing function.</value>	    
+	    public Action<ICanvas, Rect> DrawingFunction { get; set; }       
 
 		#endregion
 
@@ -130,7 +104,7 @@ namespace NControl.Abstractions
         /// <summary>
         /// Invalidate this instance.
         /// </summary>
-        protected void Invalidate()
+        public void Invalidate()
         {
             if (OnInvalidate != null)
                 OnInvalidate(this, EventArgs.Empty);
@@ -142,10 +116,6 @@ namespace NControl.Abstractions
 		/// <param name="canvas">Canvas.</param>
         public virtual void Draw(ICanvas canvas, Rect rect)
 		{
-            if(_backgroundColor != Xamarin.Forms.Color.Transparent)
-                canvas.FillRectangle(rect, new NGraphics.Color(
-                    _backgroundColor.R, _backgroundColor.G, _backgroundColor.B));
-            
             if (DrawingFunction != null)
                 DrawingFunction(canvas, rect);
 		}
@@ -158,38 +128,57 @@ namespace NControl.Abstractions
         /// Touchs down.
         /// </summary>
         /// <param name="point">Point.</param>
-        public virtual void TouchesBegan(IEnumerable<NGraphics.Point> points)
+        public virtual bool TouchesBegan(IEnumerable<NGraphics.Point> points)
         {
             if (OnTouchesBegan != null)
+            {
                 OnTouchesBegan(this, points);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
         /// Toucheses the moved.
         /// </summary>
         /// <param name="point">Point.</param>
-        public virtual void TouchesMoved(IEnumerable<NGraphics.Point> points)
+        public virtual bool TouchesMoved(IEnumerable<NGraphics.Point> points)
         {
             if (OnTouchesMoved != null)
+            {
                 OnTouchesMoved(this, points);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
         /// Toucheses the cancelled.
         /// </summary>
-        public virtual void TouchesCancelled(IEnumerable<NGraphics.Point> points)
+        public virtual bool TouchesCancelled(IEnumerable<NGraphics.Point> points)
         {
             if (OnTouchesCancelled != null)
+            {
                 OnTouchesCancelled(this, points);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
         /// Toucheses the ended.
         /// </summary>
-        public virtual void TouchesEnded(IEnumerable<NGraphics.Point> points)
+        public virtual bool TouchesEnded(IEnumerable<NGraphics.Point> points)
         {
-            if (OnTouchesEnded != null)
+            if (OnTouchesEnded != null) { 
                 OnTouchesEnded(this, points);
+                return true;
+            }
+
+            return false;
         }
 
         #endregion

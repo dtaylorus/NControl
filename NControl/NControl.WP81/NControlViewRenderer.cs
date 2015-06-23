@@ -41,25 +41,39 @@ using System.Windows.Shapes;
 using NControl.WP81;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.WinPhone;
+using Thickness = System.Windows.Thickness;
 
 [assembly: ExportRenderer(typeof(NControlView), typeof(NControlViewRenderer))]
 namespace NControl.WP81
-{    
-	/// <summary>
-	/// NControlView renderer.
-	/// </summary>
+{
+    /// <summary>
+    /// NControlView renderer.
+    /// </summary>
     public class NControlViewRenderer : ViewRenderer<NControlView, NControlNativeView>
-	{
+    {
         /// <summary>
         /// Canvas element
         /// </summary>
-        private Canvas _canvas;
+        protected Canvas Canvas;
 
-		/// <summary>
-		/// Used for registration with dependency service
-		/// </summary>
-		public static void Init() { }
-        
+        /// <summary>
+        /// Border element
+        /// </summary>
+        protected Border Border;
+
+        /// <summary>
+        /// Used for registration with dependency service
+        /// </summary>
+        public static void Init() { }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public NControlViewRenderer()
+            : base()
+        {
+        }
+
         /// <summary>
         /// Raises the element changed event.
         /// </summary>
@@ -73,23 +87,28 @@ namespace NControl.WP81
 
             if (e.NewElement != null)
             {
-                e.NewElement.OnInvalidate += HandleInvalidate;                              
+                e.NewElement.OnInvalidate += HandleInvalidate;
             }
 
             if (Control == null)
             {
-                var b = new NControlNativeView();
-                _canvas = new Canvas();                                
-                b.Children.Add(_canvas);
+                var ctrl = new NControlNativeView();
+                Canvas = new Canvas();
+                Border = new Border
+                {
+                    Child = Canvas,                    
+                };                
+                
+                ctrl.Children.Add(Border);
 
-                SetNativeControl(b);
+                SetNativeControl(ctrl);
 
                 UpdateClip();
-                
-                Touch.FrameReported += Touch_FrameReported;
 
-                RedrawControl();
+                Touch.FrameReported += Touch_FrameReported;
             }
+
+            RedrawControl();
         }
 
         /// <summary>
@@ -110,20 +129,22 @@ namespace NControl.WP81
         protected override void OnElementPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             base.OnElementPropertyChanged(sender, e);
-            
+
             if (Control != null)
             {
-                if (e.PropertyName == NControlView.IsClippedToBoundsProperty.PropertyName)                    
+                if (e.PropertyName == Layout.IsClippedToBoundsProperty.PropertyName)
                     UpdateClip();
-            }            
+            }
 
             // Redraw when height/width changes
-            if (e.PropertyName == NControlView.HeightProperty.PropertyName ||
-                e.PropertyName == NControlView.WidthProperty.PropertyName)
+            if (e.PropertyName == VisualElement.HeightProperty.PropertyName ||
+                e.PropertyName == VisualElement.WidthProperty.PropertyName)
             {
                 UpdateClip();
-                RedrawControl();                
+                RedrawControl();
             }
+            else if (e.PropertyName == NControlView.BackgroundColorProperty.PropertyName)
+                RedrawControl();
         }
 
         #region Drawing
@@ -133,11 +154,14 @@ namespace NControl.WP81
         /// </summary>
         private void RedrawControl()
         {
-            if (Element.Width == -1 || Element.Height == -1)
+            if (Element.Width.Equals(-1) || Element.Height.Equals(-1))
                 return;
 
-            _canvas.Children.Clear();
-            var canvas = new CanvasCanvas(_canvas);
+            if (Canvas == null)
+                return;
+
+            Canvas.Children.Clear();
+            var canvas = new CanvasCanvas(Canvas);
 
             Element.Draw(canvas, new NGraphics.Rect(0, 0, Element.Width, Element.Height));
         }
@@ -173,7 +197,7 @@ namespace NControl.WP81
                     if (!ourRect.Contains(mainTouchPoint.Position.X, mainTouchPoint.Position.Y))
                         return;
 
-                    var touches = e.GetTouchPoints(page).Select(t => new NGraphics.Point(t.Position.X, t.Position.Y));
+                    var touches = e.GetTouchPoints(this).Select(t => new NGraphics.Point(t.Position.X, t.Position.Y));
 
                     if (mainTouchPoint.Action == TouchAction.Move)
                     {
@@ -186,10 +210,6 @@ namespace NControl.WP81
                     else if (mainTouchPoint.Action == TouchAction.Up)
                     {
                         Element.TouchesEnded(touches);
-                    }
-                    else if (mainTouchPoint.Action == TouchAction.Leave)
-                    {
-                        Element.TouchesCancelled(touches);
                     }
 
                     break;
@@ -208,9 +228,9 @@ namespace NControl.WP81
         /// </summary>
         private void UpdateClip()
         {
-            if (Element.Width == -1 || Element.Height == -1)
+            if (Element.Width.Equals(-1) || Element.Height.Equals(-1))
                 return;
-            
+
             Control.SetClip(Element.IsClippedToBounds);
         }
 
@@ -226,8 +246,5 @@ namespace NControl.WP81
         }
 
         #endregion
-	}
+    }
 }
-
-
-
